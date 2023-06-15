@@ -1,10 +1,4 @@
-import pandas as pd
-import io 
-from itertools import compress
-import itertools
 import streamlit as st
-from io import StringIO
-# import chardet
 
 #  value with index
 def fun(line):
