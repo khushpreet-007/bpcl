@@ -155,7 +155,7 @@ def c(file):
 
             i=0
             str1 = ""
-            while(i<len(s1)-1):
+            while(i<len(min(s1, s2))):
                 str1+=s2[i]+': '
                 str1+=s1[i]+'\n'
                 i=i+1
@@ -163,9 +163,9 @@ def c(file):
             return str1
 
         Download_file =''
-        Download_file+=listToString(data_value, table_value)
-
+        
         if total is not None:
+            Download_file+=listToString(data_value, table_value)
             st.download_button('Download CSV', Download_file)
             st.write(total)
         else:
