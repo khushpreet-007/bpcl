@@ -141,15 +141,22 @@ def calculate(value, search_word, table, l1, l2):
         l4 +=do_split(dt)
         width = min(len(ans), len(l4))
         curr = {ans[i]: l4[i] for i in range(width)}
-        return l4, ans, curr
+        if curr is not None:
+            return l4, ans, curr
+        else :
+            return 0
+
 
 def c(file):
         Table_name = get_line(file)
         value = get_attribute(file)
         data_type1, data_type2 = get_data_type(file)
-        data_value, table_value, total = calculate(value, search_word, Table_name, data_type1, data_type2)
+        print(data_type1)
+        flag =0
+        if(calculate(value, search_word, Table_name, data_type1, data_type2)):
         # df = pd.read_csv(ans)
-        
+            flag =1
+            data_value, table_value, total = calculate(value, search_word, Table_name, data_type1, data_type2)
         def listToString(s1,s2):
             # initialize an empty string
 
@@ -164,7 +171,7 @@ def c(file):
 
         Download_file =''
         
-        if total is not None:
+        if flag==1:
             Download_file+=listToString(data_value, table_value)
             st.download_button('Download CSV', Download_file)
             st.write(total)
