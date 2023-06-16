@@ -14,6 +14,7 @@ def fun_separate(line):
 def get_attribute(file_name): 
   att=''
   for line1 in get_interesting_line(file_name,'[', ']'):
+      line1 = line1.replace('cnfg', 'dbo')
       att+=fun(line1)+' , '
       
   y=[]
