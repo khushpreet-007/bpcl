@@ -141,19 +141,35 @@ def calculate(value, search_word, table, l1, l2):
         l4 +=do_split(dt)
         width = min(len(ans), len(l4))
         curr = {ans[i]: l4[i] for i in range(width)}
-        return curr
-
+        return l4, ans, curr
 
 def c(file):
-      Table_name = get_line(file)
-      value = get_attribute(file)
-      data_type1, data_type2 = get_data_type(file)
-      ans = calculate(value, search_word, Table_name, data_type1, data_type2)
-    #   print(ans)
-      if ans is not None:
-        st.write(ans)
-      else:
-        st.write("Word Not Found !!")
+        Table_name = get_line(file)
+        value = get_attribute(file)
+        data_type1, data_type2 = get_data_type(file)
+        data_value, table_value, total = calculate(value, search_word, Table_name, data_type1, data_type2)
+        # df = pd.read_csv(ans)
+        
+        def listToString(s1,s2):
+            # initialize an empty string
+
+            i=0
+            str1 = ""
+            while(i<len(s1)-1):
+                str1+=s2[i]+': '
+                str1+=s1[i]+'\n'
+                i=i+1
+           
+            return str1
+
+        Download_file =''
+        Download_file+=listToString(data_value, table_value)
+
+        if total is not None:
+            st.download_button('Download CSV', Download_file)
+            st.write(total)
+        else:
+            st.write("Word Not Found !!")
 
 if __name__ == '__main__':
     file_name = st.file_uploader("Upload File", accept_multiple_files=True,type=['.txt'])
