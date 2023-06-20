@@ -1,96 +1,15 @@
 import streamlit as st
+import pandas as pd
+import re
 
-#  value with index
-def fun(line):
-    start_index = line.find('[')
-    end_index = line.find(']',start_index)
-    start_string = line[start_index+1:end_index]
-    return start_string
-
-def fun_separate(line):
-    x = line.split("dbo , dbo")
-    return x
-
-def get_attribute(file_name): 
-  att=''
-  for line1 in get_interesting_line(file_name,'[', ']'):
-      line1 = line1.replace('cnfg', 'dbo')
-      att+=fun(line1)+' , '
-      
-  y=[]
-  y +=fun_separate(att)
-
-  y1 = dict(map(reversed, enumerate(y)))
-  value = dict(zip(y1.values(), y1.keys()))
-  return value
-
-#  Table name with index
 def Table_name(line):
     start_index = line.find('.[')
     end_index = line.find('](',start_index)
     start_string = line[start_index+2:end_index]
     return start_string
 
-def fun_separate_table_name(line):
-    x = line.split("\n")
-    return x
-
-def get_line(file_name): 
-  s=''
-  for line in get_interesting_line(file_name,'[', ']','.', ']('):
-      s+=Table_name(line)+'\n'
-
-  y=[]
-  y +=fun_separate_table_name(s)
-
-  y1 = dict(map(reversed, enumerate(y)))
-  table = dict(zip(y1.values(), y1.keys()))
-  return table
-
-
-#  calculating datatype of element
-def fun1(line):
-    start_index = line.find('[')
-    end_index = line.find(']',start_index)
-    start_string = line[start_index+1:end_index]
-    
-    start_index1 = end_index+2
-    end_index1 = line.find(']',start_index1)
-    start_string1 = line[start_index1+1:end_index1]
-    return start_string
-
-def fun2(line):
-    start_index = line.find('[')
-    end_index = line.find(']',start_index)
-    start_string = line[start_index+1:end_index]
-    
-    start_index1 = end_index+2
-    end_index1 = line.find(']',start_index1)
-    start_string1 = line[start_index1+1:end_index1]
-    return start_string1
-
-def do_split(line):
-    x = line.split(" , ")
-    return x
-
-def get_data_type(file_name): 
-  att=''
-  for line1 in get_interesting_line(file_name,']', 'NULL'):
-      att+=fun(line1)+' , '
-
-  l1=[]
-  l1 +=do_split(att)
-
-  data_type=''
-  for line1 in get_interesting_line(file_name,']', 'NULL'):
-      data_type+=fun2(line1)+' , '
-
-  data_type = data_type.replace(" AS ('BPC'+right(CONVERT([", " ")
-  l2=[]
-  l2 +=do_split(data_type)
-  return l1, l2
-
-def get_interesting_line(uploaded_file,*searches):
+#  For find line having value with index 
+def get_interesting_line_value(uploaded_file,*searches):
     currentLine = 0
     if uploaded_file is not None:
         data = uploaded_file.getvalue().decode('utf-16').splitlines()
@@ -101,83 +20,172 @@ def get_interesting_line(uploaded_file,*searches):
             else:
                 currentLine += 1 
 
-
-def search_word_in_file(line, search_word):
-    if search_word in line:
-        return True
-    return False
-
-
-def calculate(value, search_word, table, l1, l2):
-    def do_split(line):
-        x = line.split(" , ")
+#  For find line having table with index 
+def get_interesting_line_table(uploaded_file):
+    if uploaded_file is not None:
+        # bytes_data = uploaded_file.getvalue()
+        data = uploaded_file.getvalue().decode('utf-16').splitlines()
+        lines_filtered = [line.strip() for line in data if '.' in line and 
+                          'ALTER' not in line and 
+                          'EXEC'  not in line and
+                          ','  not in line and
+                          'Script'  not in line and
+                          'SYSTEM_VERSIONING'  not in line
+                         ]         
+        return lines_filtered
+        
+#  Table name with index
+def calculate_table_name(file_name):
+    def fun_separate_table_name(line):
+        x = line.split("\n")
         return x
 
+    lines_filtered = get_interesting_line_table(file_name)
+
+    s=''
+    for line in lines_filtered:
+        Table_name(line)
+        s+=Table_name(line)+'\n'
+        lines_string = '\n'.join(lines_filtered)
+
+    y_list =[]
+    y_list +=fun_separate_table_name(s)
+
+    y2 = dict(map(reversed, enumerate(y_list)))
+    table = dict(zip(y2.values(), y2.keys()))
+    return table
+
+#  value with index
+def fun_value(line):
+    start_index = line.find('[')
+    end_index = line.find(']',start_index)
+    start_string = line[start_index+1:end_index]
+    return start_string
+
+def fun_separate_value(line):
+    x = line.split("dbo , dbo")
+    return x
+
+def calculate_value_index(file_name):
+    att=''
+    for line1 in get_interesting_line_value(file_name,'[', ']'):
+        line1 = line1.replace('ebiz', 'dbo')
+        line1 = line1.replace('cnfg', 'dbo')
+        line1 = line1.replace('pi', 'dbo')
+        line1 = line1.replace('bi', 'dbo')
+        att+=fun_value(line1)+' , '
         
-    l5=[]
-    for k in value:
-        l6=[]
-        l6 +=do_split(value[k])
-        if search_word in l6:
-            l5.append(k)
-    flag =1      
-    ans=[]
-    print(f"Searched Attribute: '{search_word}' in the file")
-    if(len(l5)>0):
-        for i in range(len(l5)):
-            ans.append(table[l5[i]])
-    else:
-        flag =0
-    if(flag ==1):
-        dt=''
-        for (a, b) in zip(l1, l2):
-            if(a==search_word):
-                dt += b+' '
+    y_list_att=[]
+    y_list_att +=fun_separate_value(att)
+    return y_list_att
+
+#  Datatype of element
+def get_interesting_line_data_type(uploaded_file):
+    pattern = r'\[.*?\].*?\[.*?\]'
+    currentLine = 0
+    matching_lines = []
+    if uploaded_file is not None:
+        data = uploaded_file.getvalue().decode('utf-16').splitlines()
+        for line in data:
+            if currentLine > 3:
+                matches = re.findall(pattern, line)
+                if matches:
+                    matching_lines.append(matches)
+            else:
+                currentLine += 1
+    return matching_lines
+
+def calculate_data_Type(file_name):
+    matching_lines = get_interesting_line_data_type(file_name)
+    keywords = ['dbo', 'cnfg', 'pi', 'bi']
+    filtered_lines = [line for line in matching_lines if all(keyword not in line for keyword in keywords)]
+    return filtered_lines
+
+
+def calculate(value_index, Table_name, filtered_lines,search_word):  
+        def fun1(line):
+            start_index = line.find("[")
+            end_index = line.find(']',start_index)
+            start_string = line[start_index+1:end_index]
+            return start_string
+        
+        def fun2(line):
+            start_index = line.find(' [')
+            end_index = line.find(']',start_index)
+            start_string = line[start_index+2:end_index]
+            return start_string
 
         def do_split(line):
-            x = line.split(" ")
-            return x 
+            x = line.split(" , ")
+            return x
 
-        l4=[]
-        l4 +=do_split(dt)
-        width = min(len(ans), len(l4))
-        curr = {ans[i]: l4[i] for i in range(width)}
-        if curr is not None:
-            return l4, ans, curr
-        else :
+        l5=[]
+        j=0
+        for k in value_index:
+            l6=[]
+            l6 +=do_split(k)
+            if search_word in l6:
+                # print()
+                l5.append(j) 
+            j=j+1 
+        
+        ans =[]
+        for i in range(len(l5)):
+            ans.append(Table_name[l5[i]])
+
+        data_type =[]
+        for line in filtered_lines:
+            # print(line)
+            att5=''
+            att6=''
+            str_line = str(line[0])
+            att5+=fun1(str_line)
+        #     print(att5)
+            if att5 == search_word:
+                att6 +=fun2(str_line)+' '
+                data_type.append(att6)
+
+        # print(ans)
+        if len(ans)>0:
+            width = min(len(ans), len(data_type))
+            total = {ans[i]: data_type[i] for i in range(width)}
+            return total, ans, data_type
+        else:
             return 0
 
-
 def c(file):
-        Table_name = get_line(file)
-        value = get_attribute(file)
-        data_type1, data_type2 = get_data_type(file)
-        print(data_type1)
-        flag =0
-        if(calculate(value, search_word, Table_name, data_type1, data_type2)):
-        # df = pd.read_csv(ans)
-            flag =1
-            data_value, table_value, total = calculate(value, search_word, Table_name, data_type1, data_type2)
-        def listToString(s1,s2):
-            # initialize an empty string
+        i=0
+        for i in range(len(file_name)):
+            value = calculate_value_index(file_name[i])
+            Table_name = calculate_table_name(file_name[i])
+            filtered_lines = calculate_data_Type(file_name[i])
+            flag =0
 
-            i=0
-            str1 = ""
-            while(i<len(min(s1, s2))):
-                str1+=s2[i]+': '
-                str1+=s1[i]+'\n'
-                i=i+1
-           
-            return str1
+            if(calculate(value, Table_name, filtered_lines, search_word)):
+                flag =1
+                total, ans, data_type = calculate(value, Table_name, filtered_lines, search_word)
 
-        Download_file =''
-        
-        if flag==1:
-            Download_file+=listToString(data_value, table_value)
-            st.download_button('Download CSV', Download_file)
-            st.write(total)
-        else:
-            st.write("Word Not Found !!")
+    
+            def listToString(s1,s2):
+                # initialize an empty string
+                i=0
+                str1 = ""
+                while(i<len(min(s1, s2))):
+                    str1+=s2[i]+': '
+                    str1+=s1[i]+'\n'
+                    i=i+1
+            
+                return str1
+
+            Download_file =''
+     
+            if flag ==1:
+                Download_file+=listToString(data_type, ans)
+                st.download_button('Download Text File', Download_file)
+                # print(total)
+                st.write(total)
+            else:
+                st.write("Word Not Found !!")
 
 if __name__ == '__main__':
     file_name = st.file_uploader("Upload File", accept_multiple_files=True)
