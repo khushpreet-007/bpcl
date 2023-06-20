@@ -180,8 +180,8 @@ def c(file):
             Download_file =''
      
             if flag ==1:
-                Download_file+=listToString(data_type, ans)
-                st.download_button('Download Text File', Download_file)
+                # Download_file+=listToString(data_type, ans)
+                # st.download_button('Download Text File', Download_file)
                 # print(total)
                 st.write(total)
             else:
